@@ -1,0 +1,34 @@
+body{position: relative;}
+a{cursor: pointer;}
+a,a:hover,a:focus{text-decoration: none;}
+li{list-style-type: none;}
+ul,ol,p{margin: 0;padding: 0;}
+.green{color: #69aa46 !important}
+.orange{color: #ff892a !important}
+.light-orange {color: #fcac6f !important}
+.purple{color: #a069c3 !important}
+.pink{color: #c6699f !important}
+.brown{color: #a52a2a !important}
+.grey{color: #777 !important}
+.blue{color: #478fca !important}
+.light-blue {color: #93cbf9 !important}
+.red {color: #dd5a43 !important}
+.light-red {color: #f77 !important}
+.dark {color: #333 !important}
+.white {color: #fff !important}
+.form-actions{padding: 13px;background-color: #eff3f8;text-align: center;}
+.form-actions .btn{margin-right: 10px;height: 33px;min-width: 80px}
+
+/*表单样式*/
+.form-group{margin-left: 0 !important;margin-right: 0 !important}
+.form-group>.control-label{margin-right: 8px;font-weight: normal;text-align: right;padding-top: 7px;vertical-align: top;margin-bottom: 0;}
+.form-group .help-block{margin-bottom: 0}
+.form-group>div{display: inline-block;}
+input.xs{width: 100px}
+input.sm{width: 200px}
+input.md{width: 400px}
+input.lg{width: 500px}
+.control-label b{color: #ff0000;font-weight: bold;vertical-align: top;font-size: 20px;margin-right: 3px}
+
+#viewAdminAdd .form-group .control-label{width: 100px}
+#viewAdminAdd .form-group>div>.form-control{width: 320px}

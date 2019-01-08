@@ -49,9 +49,7 @@ use yii\helpers\Html;
         <?= $this->render('menu')?>
     </ul>
 </div>
-<div class="view">
-    <?= $content ?>
-</div>
+<?= $content ?>
 <!--[if !IE]> -->
 <script src="/plugin/jquery-2.0.3.min.js"></script>
 <!-- <![endif]-->
@@ -59,6 +57,7 @@ use yii\helpers\Html;
 <script type="text/javascript" src="/plugin/jquery-1.12.1.min.js"></script>
 <![endif]-->
 <script src="/plugin/bootstrap/bootstrap.min.js"></script>
+<script src="/plugin/layer/layer.js"></script>
 <?php if(!empty($this->context->jsfiles['plugin'])):foreach($this->context->jsfiles['plugin'] as $v):?>
 <script src="/plugin/<?= $v?>.js?v=<?= time()?>"></script>
 <?php endforeach;endif;?>

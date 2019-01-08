@@ -1,16 +1,14 @@
 <?php
 namespace admin\services;
-
 use Yii;
 use yii\data\Pagination;
 use admin\models\Admin as AdminModel;
 class Admin
 {
-
-    public static function create($post)
+    public static function add($post)
     {
         // 校验手机号
-        if (!empty($post['phone']) && AdminModel::find()->where(['phone'=>$post['phone']])->one()) {
+        if (!empty($post['mobile']) && AdminModel::find()->where(['mobile'=>$post['mobile']])->one()) {
             return '手机号已存在';
         }
         if (!empty($post['email']) && AdminModel::find()->where(['email'=>$post['email']])->one()) {
@@ -19,31 +17,25 @@ class Admin
         $trans = Yii::$app->db->beginTransaction();
         try {
             $admin = new AdminModel;
-            $admin->scenario = 'insert';
+            $admin->scenario = 'add';
             $admin->realname = $post['realname'];
             $admin->email = $post['email'];
-            $admin->phone = $post['phone'];
-            $admin->nickname = $post['nickname'];
-            $admin->desc = $post['desc'];
-            $admin->gender = $post['gender'];
-            $admin->account = (string)self::generateAccount();
-            $admin->passwd = self::generatePasswd();
-            if (empty($post['status'])) {
-                $admin->status = 2;
-            }
+            $admin->mobile = $post['mobile'];
+            $admin->intro = $post['intro'];
+            $admin->sex = $post['sex'];
             if (!$admin->save()) {
                 throw new \Exception('保存失败');
             }
-            if (!empty($post['rbac_role'])) {
-                $rabcAdminRoleRecords = [];
-                foreach ($post['rbac_role'] as $k => $v) {
-                    $rabcAdminRoleRecords[] = [
+            if (!empty($post['rbac_roles'])) {
+                $rbacAdminRoleRecords = [];
+                foreach ($post['rbac_roles'] as $k => $v) {
+                    $rbacAdminRoleRecords[] = [
                         'admin_id' => $admin->id,
                         'role_id'  => $v,
                     ];
                 }
                 $batchInsert = \Yii::$app->db->createCommand()
-                    ->batchInsert('rbac_admin_role', ['admin_id', 'role_id'], $rabcAdminRoleRecords)
+                    ->batchInsert('rbac_admin_role', ['admin_id', 'role_id'], $rbacAdminRoleRecords)
                     ->execute();
                 if ($batchInsert<1) {
                     throw new \Exception('保存失败');
@@ -121,21 +113,25 @@ class Admin
         }
     }
 
-    public static function generateAccount()
-    {
-        $lastAccount = AdminModel::find()->select('account')->orderBy('id desc')->asArray()->one();
-        return $lastAccount['account'] + 1;
-    }
-
     public static function getList($params)
     {
         $query = AdminModel::find()->where(['>', 'admin.status', -1]);
-        
+        $query->with([
+            'rbacRole'
+        ]);
         $query->andWhere(['<>', 'admin.id', 1]);
         if (!empty($params['key'])) {
-            $query->andFilterWhere(['or', ['like', 'admin.nickname', $params['key']], ['like', 'admin.account', $params['key']], ['like', 'admin.mobile', $params['key']]]);
+            $query->andFilterWhere(['or', ['like', 'admin.realname', $params['key']], ['like', 'admin.account', $params['key']], ['like', 'admin.mobile', $params['key']]]);
         }
-        
+        if (!empty($params['rbac_role'])) {
+            $query->joinWith([
+                'rbacAdminRole'=>function($query) use ($params){
+                    if (!empty($params['rbac_role'])) {
+                        $query->where(['rbac_admin_role.role_id'=>$params['rbac_role']]);
+                    }
+                }
+            ]);
+        }
         if (!empty($params['status'])) {
             $query->andFilterWhere(['admin.status'=>$params['status']]);
         }
@@ -143,20 +139,18 @@ class Admin
             $rangeStamp = \Yii::$app->helper->rangeStamp($params['create_at']);
             $query->andFilterWhere(['between', 'admin.create_at', $rangeStamp[0], $rangeStamp[1]]);
         }
-        $records = $query->count();
-        $offset = ($params['page']-1)*$params['rows'];
-        $rows = $query->offset($offset)
+        $pager = new Pagination([
+            'totalCount' => $query->count(),
+            'pageSize' => 20,
+            'pageSizeParam' => false,
+            'pageParam' => 'p',
+        ]);
+        $list = $query->offset($pager->offset)
             ->orderBy('id desc')
-            ->limit($params['rows'])
+            ->limit($pager->limit)
             ->asArray()
             ->all();
-        return [
-            'page'    => $params['page'], 
-            'total'   => ceil($records/$params['rows']), 
-            'records' => $records, 
-            'rows'    => $rows
-        ];
-
+        return ['list'=>$list,'pager'=>$pager];
     }
 
 
@@ -167,16 +161,17 @@ class Admin
      */
     public static function changeStatus($input)
     {
-        $admin = AdminModel::findOne($input['id']);
-        $admin->scenario = 'changeStatus';
-        $admin->status = $input['status'];
-        $admin->admin_id = \Yii::$app->user->id;
-        $result = $admin->save();
-        $msg = $input['status']==1 ? '启用' : ($input['status']==2 ? '停用' : '删除');
-        if($result) {
-            return ['code'=>0, 'msg'=>$msg.'成功'];
+        $update = \Yii::$app->db->createCommand()
+            ->update('admin', [
+                'status'     => $input['status'], 
+                'aid'        => Yii::$app->user->id,
+                'updated_at' => time()
+            ], ['id' => explode(",", $input['id'])])
+            ->execute();
+        if ($update!==false) {
+            return true;
         }
-        return ['code'=>-1, 'msg'=>$msg.'失败'];
+        return false;
     }
     
     public static function login($post)

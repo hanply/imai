@@ -9,4 +9,6 @@ return [
             'copy' => '2014-2020',
         ]
     ],
+    'rbac' => true,
+    'default_passwd' => 123456,
 ];

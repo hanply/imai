@@ -12,7 +12,7 @@ use Yii;
  * @property string $role_id
  * @property integer $status
  */
-class RbacAdminRole extends \yii\db\ActiveRecord
+class AdminRole extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc

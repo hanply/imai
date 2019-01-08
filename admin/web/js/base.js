@@ -16,6 +16,17 @@ window.app = {
             if (!f || f.length == 0) return 
             if (f.is(":visible")) f.hide() 
         })
+
+        $(".search-form input,.search-form select").change(function(){
+            $(".search-form").submit();
+        })
+
+        $(".checkAll").click(function(){
+            $(".checkbox-item").prop('checked', $(this).is(":checked"));
+        })
+        $(".checkbox-item").click(function(){
+            $(".checkAll").prop('checked', $(this).is(":checked") && $('.checkbox-item:checked').length==$(".checkbox-item").length);
+        })
     },
     funs: {
         date: function(timestamp) {
@@ -41,7 +52,53 @@ window.app = {
                 }
             }
             return result;
-        }
+        },
+        ajaxChangeStatus: function (url, data) {
+            $.ajax({
+                url: url,
+                data: data,
+                dataType: 'json',
+                success: function(response) {
+                    if(response.code==0) {
+                        layer.msg(response.msg, {icon:1}, function(){
+                            window.location.reload();
+                        });
+                    }else{
+                        layer.msg(response.msg, {icon:5});
+                    }
+                }
+            })
+        },
+        switch: function (that, url, id, _confirm) {
+            if (_confirm==1) {
+                var title = $(that).attr('title');
+                layer.confirm('确定要'+title+'吗？', {title: '提示信息', icon: 3}, function(index) {
+                    layer.close(index);
+                    app.funs.ajaxChangeStatus(url, {id: id});
+                })
+            }else{
+                app.funs.ajaxChangeStatus(url, {id: id});
+            }
+        },
+        switchChecked: function (that, url, _confirm) {
+            var title = $(that).attr('title');
+            if ($(".checkbox-item:checked").length<1) {
+                layer.msg('请选择要'+title+'的列表项');
+            }else{
+                var id = [];
+                $(".checkbox-item:checked").each(function(){
+                    id.push($(this).val());
+                })
+                if (_confirm==1) {
+                    layer.confirm('确定要'+title+'吗？', {title: '提示信息', icon: 3}, function(index) {
+                        layer.close(index);
+                        app.funs.ajaxChangeStatus(url, {id: id.join(',')});
+                    })
+                }else{
+                    app.funs.ajaxChangeStatus(url, {id: id.join(',')});
+                }
+            }
+        },
     },
     cookie: {
         get: function(c) {
@@ -114,7 +171,7 @@ window.app = {
             },
             showErrors:function(errorMap,errorList) {
                 if(errorList.length > 0){
-                    layer.msg(errorList[0].message)
+                    layer.msg(errorList[0].message, {offset: '60px', icon:5, anim: 6})
                 }
             },
             submitHandler: function (form) {
@@ -137,7 +194,7 @@ window.app = {
             }
         },
         init: function (set) {
-            var option = app.mergeOption(this.option, set);
+            var option = app.funs.mergeOption(this.option, set);
             $(option.obj).validate(option);
         }
     }

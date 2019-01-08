@@ -1,8 +1,9 @@
 <?php
-
 namespace admin\models;
 
 use Yii;
+use admin\modules\rbac\models\Role;
+use admin\modules\rbac\models\AdminRole;
 
 /**
  * This is the model class for table "admin".
@@ -39,7 +40,7 @@ class Admin extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function rules()
     {
         return [
-            [['account', 'nickname', 'realname', 'passwd', 'aid', 'updated_at', 'created_at'], 'required'],
+            [['account', 'realname', 'passwd', 'aid', 'updated_at', 'created_at'], 'required'],
             [['department_id', 'sex', 'status', 'aid', 'updated_at', 'created_at'], 'integer'],
             [['account', 'nickname', 'realname'], 'string', 'max' => 20],
             [['mobile'], 'string', 'max' => 15],
@@ -73,6 +74,75 @@ class Admin extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'updated_at' => 'Updated At',
             'created_at' => 'Created At',
         ];
+    }
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => \yii\behaviors\TimestampBehavior::className(),
+                'attributes' => [
+                    \yii\db\ActiveRecord::EVENT_BEFORE_INSERT => ['created_at', 'updated_at'],
+                    \yii\db\ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_at'],
+                ],
+            ],
+            [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    \yii\db\ActiveRecord::EVENT_BEFORE_INSERT => 'aid',
+                    \yii\db\ActiveRecord::EVENT_BEFORE_UPDATE => 'aid',
+                ],
+                'value' => function ($event) {
+                    return Yii::$app->user->id;
+                },
+            ],
+            [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    \yii\db\ActiveRecord::EVENT_BEFORE_INSERT => 'passwd',
+                ],
+                'value' => function ($event) {
+                    return Yii::$app->security->generatePasswordHash(Yii::$app->params['default_passwd']);
+                },
+            ],
+            [
+                'class' => \yii\behaviors\AttributeBehavior::className(),
+                'attributes' => [
+                    \yii\db\ActiveRecord::EVENT_BEFORE_INSERT => 'account',
+                ],
+                'value' => function ($event) {
+                    $lastAccount = self::find()->select('account')->orderBy('id desc')->asArray()->one();
+                    if ((int)$lastAccount['account']==0) {
+                        return '10001';
+                    }
+                    return (string)($lastAccount['account'] + 1);
+                },
+            ],
+        ];
+    }
+
+    public function scenarios()
+    {
+        $scenarios = parent::scenarios();
+
+        $scenarios['login'] = ['account', 'passwd', 'rememberMe'];
+        $scenarios['changePasswd'] = ['passwd'];
+        $scenarios['changeStatus'] = [];
+        $scenarios['add'] = ['realname', 'mobile'];
+        $scenarios['edit'] = ['nickname', 'status', 'phone', 'email', 'gender', 'intro'];
+        
+        return $scenarios;
+    }
+
+    public function getRbacAdminRole()
+    {
+        return $this->hasMany(AdminRole::className(), ['admin_id' => 'id'])->onCondition(['rbac_admin_role.status' => 1]);
+    }
+
+    public function getRbacRole()
+    {
+        return $this->hasMany(Role::className(), ['id' => 'role_id'])
+            ->via('rbacAdminRole')->onCondition(['rbac_role.status' => 1]);
     }
 
     /**

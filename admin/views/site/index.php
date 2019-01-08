@@ -4,7 +4,8 @@
 
 $this->title = '鑫全考研';
 ?>
-<div class="view-header">
+<div class="view">
+    <div class="view-header">
 </div>
 <div class="site-index">
 
@@ -146,4 +147,6 @@ $this->title = '鑫全考研';
         </div>
 
     </div>
+</div>   
 </div>
+

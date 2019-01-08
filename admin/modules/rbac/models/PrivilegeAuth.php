@@ -12,7 +12,7 @@ use Yii;
  * @property string $auth_id
  * @property integer $status
  */
-class RbacPrivilegeAuth extends \yii\db\ActiveRecord
+class PrivilegeAuth extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc

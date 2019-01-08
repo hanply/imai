@@ -15,7 +15,7 @@ use Yii;
  * @property string $updated_at
  * @property string $created_at
  */
-class RbacRole extends \yii\db\ActiveRecord
+class Role extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc

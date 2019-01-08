@@ -22,7 +22,7 @@ use Yii;
  * @property string $updated_at
  * @property string $created_at
  */
-class RbacPrivilege extends \yii\db\ActiveRecord
+class Privilege extends \yii\db\ActiveRecord
 {
     /**
      * @inheritdoc
